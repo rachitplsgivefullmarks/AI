@@ -1,0 +1,80 @@
+from collections import deque
+
+goal_state = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 0]
+]
+
+def is_goal(state):
+    return state == goal_state
+
+def find_blank(state):
+    for i in range(3):
+        for j in range(3):
+            if state[i][j] == 0:
+                return i, j
+
+def swap_positions(state, pos1, pos2):
+    new_state = [row[:] for row in state]
+    x1, y1 = pos1
+    x2, y2 = pos2
+    new_state[x1][y1], new_state[x2][y2] = new_state[x2][y2], new_state[x1][y1]
+    return new_state
+
+def get_neighbors(state):
+    neighbors = []
+    x, y = find_blank(state)
+    moves = [(-1,0), (1,0), (0,-1), (0,1)]
+    for dx, dy in moves:
+        nx, ny = x + dx, y + dy
+        if 0 <= nx < 3 and 0 <= ny < 3:
+            neighbors.append(swap_positions(state, (x,y), (nx, ny)))
+    return neighbors
+
+def state_to_tuple(state):
+    return tuple(tuple(row) for row in state)
+
+def dfs(state, depth, limit, visited, path):
+    if depth > limit:
+        return None
+    if is_goal(state):
+        return path
+    visited.add(state_to_tuple(state))
+    for neighbor in get_neighbors(state):
+        t_neighbor = state_to_tuple(neighbor)
+        if t_neighbor not in visited:
+            result = dfs(neighbor, depth + 1, limit, visited, path + [neighbor])
+            if result is not None:
+                return result
+    visited.remove(state_to_tuple(state))
+    return None
+
+def iterative_deepening_search(start_state, max_depth=50):
+    for depth_limit in range(max_depth):
+        visited = set()
+        path = dfs(start_state, 0, depth_limit, visited, [start_state])
+        if path is not None:
+            return path
+    return None
+
+def print_state(state):
+    for row in state:
+        print(' '.join(str(x) if x != 0 else ' ' for x in row))
+    print()
+
+if __name__ == "__main__":
+    start_state = [
+        [1, 2, 3],
+        [4, 0, 6],
+        [7, 5, 8]
+    ]
+
+    solution = iterative_deepening_search(start_state)
+
+    if solution:
+        print(f"Solution found in {len(solution) - 1} moves:")
+        for step in solution:
+            print_state(step)
+    else:
+        print("No solution found.")
